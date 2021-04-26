@@ -27,14 +27,14 @@ void loop() {
 
   unsigned long currentMillis = millis();
 
-  if ((currentMillis - previousMillis >= interval) && (leds[0] = ColorExhale)) {
+  if ((currentMillis - previousMillis >= interval) && (leds[0] == ColorExhale)) {
     // save the last time you blinked the LED
     previousMillis = currentMillis;
       leds[0] = ColorInhale;
     } 
     FastLED.show();
 
-  if ((currentMillis - previousMillis >= interval) && (leds[0] = ColorInhale)) {
+  if ((currentMillis - previousMillis >= interval) && (leds[0] == ColorInhale)) {
     // save the last time you blinked the LED
     previousMillis = currentMillis;
       leds[0] = ColorExhale;
