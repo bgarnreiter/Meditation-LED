@@ -1,0 +1,56 @@
+#include "FastLED.h"
+FASTLED_USING_NAMESPACE;
+
+#define DATA_PIN    6       // change to your data pin
+#define COLOR_ORDER GRB      // if colors are mismatched; change this
+#define NUM_LEDS 7   // change to the number of LEDs in your strip
+#define LED_TYPE    WS2812B
+
+const int Inhale = 1;
+const int Exhale = 2;
+int state = Inhale;
+int i = 0;
+const CRGB ColorInhale = CRGB::Green;
+const CRGB ColorExhale = CRGB::Blue;
+unsigned long previousMillis = 0;
+const long interval = 1000;
+
+CRGB leds[NUM_LEDS];
+
+void setup() {
+  // put your setup code here, to run once:
+  FastLED.show();
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+  FastLED.setBrightness(50);
+  FastLED.clear();
+  //leds[0] = CRGB::Blue; 
+  int i = 1;
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+EVERY_N_SECONDS(1){
+  i++; 
+}
+
+switch(state) {
+
+case(Inhale):
+leds[i] = ColorInhale;
+    if(i >= (NUM_LEDS-1)) {
+      state = Exhale;
+      i = -i;
+    }
+    break;
+
+case(Exhale):
+    leds[i] = ColorExhale;
+    if(i<= 1) 
+    {
+      state = Inhale;
+      i = -i;
+    }
+    break;
+}
+Serial.print(i);
+}
