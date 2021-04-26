@@ -1,0 +1,45 @@
+#include "FastLED.h"
+
+// fast led constants
+#define DATA_PIN    6       // change to your data pin
+#define COLOR_ORDER GRB      // if colors are mismatched; change this
+#define NUM_LEDS 7   // change to the number of LEDs in your strip
+#define LED_TYPE    WS2812B
+
+unsigned long previousMillis = 0;        // will store last time LED was updated
+
+// constants won't change:
+const long interval = 1000;           // interval at which to blink (milliseconds)
+
+CRGB leds[NUM_LEDS];
+const CRGB ColorInhale = CRGB::Green;
+const CRGB ColorExhale = CRGB::Blue;
+
+void setup() {
+  FastLED.show();
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+  FastLED.setBrightness(50);
+  FastLED.clear();
+  leds[0] = ColorExhale;
+}
+
+void loop() {
+
+  unsigned long currentMillis = millis();
+
+  if ((currentMillis - previousMillis >= interval) && (leds[0] = ColorExhale)) {
+    // save the last time you blinked the LED
+    previousMillis = currentMillis;
+      leds[0] = ColorInhale;
+    } 
+    FastLED.show();
+
+  if ((currentMillis - previousMillis >= interval) && (leds[0] = ColorInhale)) {
+    // save the last time you blinked the LED
+    previousMillis = currentMillis;
+      leds[0] = ColorExhale;
+    }
+    FastLED.show();
+
+    // set the LED with the ledState of the variable:
+  }
