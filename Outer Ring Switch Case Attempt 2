@@ -1,0 +1,58 @@
+#include "FastLED.h"
+FASTLED_USING_NAMESPACE;
+
+#define DATA_PIN    6       // change to your data pin
+#define COLOR_ORDER GRB      // if colors are mismatched; change this
+#define NUM_LEDS 7   // change to the number of LEDs in your strip
+#define LED_TYPE    WS2812B
+
+const int Inhale = 1;
+const int Exhale = 2;
+int state = Inhale;
+//int i = 0; trying i in a few locations
+const CRGB ColorInhale = CRGB::Green;
+const CRGB ColorExhale = CRGB::Blue;
+unsigned long previousMillis = 0;
+const long interval = 1000;
+
+CRGB leds[NUM_LEDS];
+
+void setup() {
+  // put your setup code here, to run once:
+  FastLED.show();
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+  FastLED.setBrightness(50);
+  FastLED.clear();
+  leds[0] = ColorExhale; 
+  int i = 1;
+  int state = Inhale;
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+//int i = 1; //trying i in a few locations
+EVERY_N_SECONDS(1){ //not sure if this is causing the issue?
+  
+switch(state) {
+
+case(Inhale):
+int i = 1; //trying i in a few locations; this one seemed to complie at least
+  leds[i] = ColorInhale; //assign the i value to the leds array
+  i++;  //after the assign, update the i value ++
+    if(i >= (NUM_LEDS-1)) { //if said i value is now at the max;
+      state = Exhale;  //switch to the exhale state
+    }
+    break;
+
+case(Exhale):
+   leds[i] = ColorExhale; //assign the color to leds i, which should be 6 at this point
+   i--; //reduce the i by 1 --
+    if(i<= 1)  //if i has got to the end of the desired leds array
+    {
+      state = Inhale; //swap back to Inhale state
+    }
+    break;
+}
+//Serial.print(i);
+}
+}
