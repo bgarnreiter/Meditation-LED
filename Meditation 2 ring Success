@@ -1,0 +1,195 @@
+#include "FastLED.h"                    // FastLED Library call
+
+//These are all statements that FastLED library uses in the default 
+//In particular this first one is for my Center NeoPixel set of 7, that will count breaths up and down
+
+#define DATA_PIN 6                      // Data pin for the LED
+#define COLOR_ORDER GRB                 // Order of LED colors
+#define NUM_LEDS 7                      // Total Number of LEDs on your strip
+#define LED_TYPE WS2812B                // What type of LEDs
+
+//Calling these all "-2" to delineate for the 24 count NeoPixel ring set
+
+#define DATA_PIN2 9                       // Data pin for the LED
+#define COLOR_ORDER2 GRB                  // Order of LED colors
+#define NUM_LEDS2 24                      // Total Number of LEDs on your strip
+#define LED_TYPE2 WS2812B                 // What type of LEDs
+
+int inhaleState = true;                     //Bool to help me determine the Switch Case State
+
+const CRGB ColorInhale = CRGB::Green;       //Setting the colors as default for in/exhale
+const CRGB ColorExhale = CRGB::Blue;
+
+const long interval = 1000;                  //Interval for use of couting up the Breath LEDs
+int currentLED = 1;                          //Setting this to 1 instead of Serial 0, so as to exclude 0 led from the cycle, and let it change separately
+
+unsigned long previousLEDIlluminate = 0;
+
+CRGB leds[NUM_LEDS];                          //Creating the LEDs as CRGB units
+CRGB leds2[NUM_LEDS2]; 
+
+int paletteIndex = 0;                         //Allows me to move the palette forward for the larger ring
+uint8_t whichPalette = 0;                     //Case State Var for the Different Patterns of Ring
+
+//Definine Palettes here
+
+DEFINE_GRADIENT_PALETTE (blueToRed_gp) {                                //defining the Palette
+  0, 0, 0, 255,
+  127, 247, 0, 50,
+  255, 0, 0, 255,
+ };
+
+ DEFINE_GRADIENT_PALETTE( GMT_seis_gp ) {                               //very nice rainbow
+    0,  88,  0,  0,
+   28, 255,  0,  0,
+   56, 255, 22,  0,
+   85, 255,104,  0,
+  113, 255,255,  0,
+  141, 255,255,  0,
+  169,  17,255,  1,
+  198,   0,223, 31,
+  226,   0, 19,255,
+  255,   0,  0,147};
+
+ DEFINE_GRADIENT_PALETTE (fireRed_gp) {
+  0, 240, 0, 0,
+  63, 255, 96, 0,
+  127, 215, 173, 0,
+  191, 255, 96, 0,
+  255, 240, 0, 0,
+ };
+   DEFINE_GRADIENT_PALETTE (citiBankSky_gp) {                                //defining the Palette
+  0, 40, 9, 166,
+  61, 21, 0, 190,
+  117, 0, 247, 244,
+  168, 206, 32, 249,
+  219, 101, 8, 182,
+  255, 40, 9, 166,
+ };
+
+ DEFINE_GRADIENT_PALETTE (newGreen_gp) {
+  0, 254, 255, 0,
+  84, 34, 176, 4,
+  140, 34, 176, 4,
+  168, 2, 16, 215,
+  190, 2, 70, 215,
+  200, 34, 176, 4,
+  255, 34, 176, 4,
+ };
+
+  DEFINE_GRADIENT_PALETTE (newPurple_gp) {
+  0, 108, 0, 180,
+  63, 170, 29, 190,
+  127, 252, 68, 205,
+  191, 253, 29, 63,
+  255, 108, 0, 180,
+ };
+
+  DEFINE_GRADIENT_PALETTE (greenBrown_gp) {
+  0, 47, 154, 10,
+  63, 161, 208, 14,
+  84, 88, 74, 2,
+  127, 74, 62, 2,
+  150, 88, 74, 2,
+  191, 161, 208, 14,
+  255, 47, 154, 10,
+ };
+  
+
+CRGBPalette16 currentPalette(GMT_seis_gp);      //Where palette is currently
+CRGBPalette16 targetPalette(blueToRed_gp);      //Where palette will blend to
+
+void setup() {
+  FastLED.show();
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS); //Initializing Center LED
+  FastLED.setBrightness(60);                                        //Global Brightness setting
+  FastLED.clear();
+  leds[0] = ColorInhale;                                            //Setting led[0] on center NeoPixel to the Inhale color (how you start the project)
+  FastLED.addLeds<LED_TYPE2, DATA_PIN2, COLOR_ORDER2>(leds2, NUM_LEDS2); // Initializing second LED ring
+
+  for (int i=1; i < 7; i++) {
+    leds[i] = ColorExhale;                      //Setting the whole center strip except led[0] to Exhale state, so that it will count up to Green for breahting in
+  }
+  FastLED.show();                               //Showing the above for condition
+  previousLEDIlluminate = millis();             //Set the timing
+  
+}
+
+void loop() {
+  fill_palette(leds2, NUM_LEDS2, paletteIndex, 255 / NUM_LEDS2, currentPalette, 255, LINEARBLEND);   //Filling in the palette from FastLED library
+  
+  nblendPaletteTowardPalette( currentPalette, targetPalette, 12);      //Blending the palettes from the below switch case
+  switch (whichPalette) {
+
+    case 0:
+      targetPalette = blueToRed_gp;
+      break;
+
+    case 1:
+      targetPalette = fireRed_gp;
+      break;
+
+    case 2:
+      targetPalette = newPurple_gp;
+      break;
+
+    case 3:
+      targetPalette = citiBankSky_gp;
+      break;
+
+    case 4:
+      targetPalette = newGreen_gp;
+      break;
+
+    case 5:
+      targetPalette = greenBrown_gp;
+      break;
+
+    case 6:
+      targetPalette = GMT_seis_gp;
+      break;
+  }
+
+  switch(inhaleState) {
+
+    case(true):
+
+      if (millis() >= previousLEDIlluminate + interval) {  //If timing is correct
+        leds[currentLED] = ColorInhale;                    //Change the next LED to the ColorInhale
+        currentLED++;                                      //Increase the LED number
+        if (currentLED >= 7) {                             //LEDs will always be serial, in this case 0-6. Once it reaches 7 (which doesn't exist on this ring) change to 6, and continue
+          currentLED = 6;                                   //Could also be updated to reflect NUM_LEDS, and then NUM_LEDS - 1 for various sizes
+          inhaleState = false;                              //Changing the bool to move to the next case
+          leds [0] = ColorExhale;                           //Switch led[0] to be the ColorExhale to begin decent
+        }
+        previousLEDIlluminate = millis();                   //Caputre the time this occurred to use in the future
+      }
+      FastLED.show();                                        //Show whatever stage the swtich case is in
+
+      break;                                                 //break out of case
+
+    case(false):
+
+      if (millis() >= previousLEDIlluminate + interval) {     //Nearly identical to the above, except walking back towards led[1] and changing to ColorExhale
+        leds[currentLED] = ColorExhale;
+        currentLED--;
+        if (currentLED <= 0) {
+        inhaleState = true;
+        currentLED = 1;
+        leds [0] = ColorInhale;
+      }
+      previousLEDIlluminate = millis();
+    }
+
+    FastLED.show();
+
+    break;
+  }
+  EVERY_N_MILLISECONDS(10){                         //FastLED function that will update and increase the palette index at specified time, allowing the palette to "move"
+    paletteIndex++;
+  }
+  EVERY_N_SECONDS(12) {                             //Switching the gradient every 12 seconds (in time with a full breath cycle)
+    whichPalette++;
+    if (whichPalette > 6) whichPalette = 0;  
+  }
+}
